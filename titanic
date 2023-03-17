@@ -1,0 +1,74 @@
+import pandas as pd
+from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import train_test_split
+from sklearn import metrics
+from sklearn.metrics import confusion_matrix, classification_report
+
+df = pd.read_csv("titanic_train.csv")
+print(df.info())
+print(df.isnull().sum())
+
+# drop unwanted columns which does not impact the result
+df.drop("Name",axis=1,inplace=True)
+df.drop("Ticket",axis=1,inplace=True)
+df.drop("PassengerId",axis=1,inplace=True)
+df.drop("Cabin",axis=1,inplace=True)
+df.drop("Embarked",axis=1,inplace=True)
+
+# fill the missing values in Age column
+df['Age'] = df['Age'].fillna(df["Age"].mean())
+
+# convert the string values in Sex column to numbers using encoding
+le = LabelEncoder()
+df['Sex'] = le.fit_transform(df['Sex'])
+
+new_df = df
+
+# convert the data frame in to input and output columns,X & Y
+y = df['Survived']
+df.drop("Survived", axis=1,inplace=True)
+df.dropna(axis=1, inplace=True)
+print(df.info())
+
+#split the data in to testset and trainset
+x_train, x_test, y_train, y_test = train_test_split(new_df, y, test_size=0.3)
+lr = LogisticRegression()
+lr.fit(x_train, y_train)
+y_predicted = lr.predict(x_test)
+con_matrix = confusion_matrix(y_predicted, y_test)
+print(con_matrix)
+print(classification_report(y_predicted, y_test))
+print(metrics.accuracy_score(y_predicted, y_test))
+X_test = pd.read_csv("titanic_test.csv")
+series = X_test["PassengerId"].to_list()
+X_test1 = X_test
+print(X_test1.isnull().sum())
+X_test.drop("Name", axis=1, inplace=True)
+X_test.drop("Ticket", axis=1, inplace=True)
+X_test.drop("PassengerId", axis=1, inplace=True)
+X_test.drop("Cabin", axis=1, inplace=True)
+X_test.drop("Embarked", axis=1, inplace=True)
+
+X_test['Age'] = df['Age'].fillna(X_test["Age"].median())
+X_test['Fare'] = df['Fare'].fillna(X_test["Fare"].median())
+
+le = LabelEncoder()
+X_test['Sex'] = le.fit_transform(X_test['Sex'])
+print(X_test.isnull().sum())
+
+
+Y_predicted = lr.predict(X_test)
+print(Y_predicted)
+res_df = pd.DataFrame(data=Y_predicted, columns=["Survived"])
+res_df.to_csv("res.csv")
+res_df.insert(0, "PassengerId", series)
+res_df = res_df.reset_index(drop=True)
+res_df.to_csv("Submission_1.csv", index=False)
+
+
+
+
+
+
+
